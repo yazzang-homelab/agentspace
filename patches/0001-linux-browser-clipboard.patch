@@ -1,0 +1,121 @@
+diff --git a/package/ego-browser/src/clipboard.test.mjs b/package/ego-browser/src/clipboard.test.mjs
+index 4fef835..4345616 100644
+--- a/package/ego-browser/src/clipboard.test.mjs
++++ b/package/ego-browser/src/clipboard.test.mjs
+@@ -173,11 +173,46 @@ test("clipboard transactions are serialized within one runtime", async () => {
+ 
+ test("paste explains the supported clipboard platforms", async () => {
+   await assert.rejects(
+-    () => __testing.beginNativeClipboardTransaction("temporary", "linux"),
+-    /requires macOS or Windows clipboard support.*insertText/,
++    () => __testing.beginNativeClipboardTransaction("temporary", "freebsd"),
++    /requires macOS, Windows, or agentspace clipboard support.*insertText/,
+   );
+ });
+ 
++test("Linux paste uses the browser clipboard bindings", async () => {
++  const previous = globalThis.ego;
++  const calls = [];
++  globalThis.ego = {
++    async beginClipboardTransaction(content) {
++      calls.push(["begin", content]);
++      return { transactionId: "t1" };
++    },
++    async finishClipboardTransaction(id) {
++      calls.push(["finish", id]);
++      return "restored";
++    },
++  };
++  try {
++    const transaction = await __testing.beginNativeClipboardTransaction(
++      { text: "a", html: "<b>a</b>" },
++      "linux",
++    );
++    assert.equal(await transaction.finish(), "restored");
++    await assert.rejects(() => transaction.finish(), /already finished/);
++    assert.deepEqual(calls, [
++      ["begin", { text: "a", html: "<b>a</b>" }],
++      ["finish", "t1"],
++    ]);
++    delete globalThis.ego;
++    await assert.rejects(
++      () => __testing.beginNativeClipboardTransaction("a", "linux"),
++      /requires agentspace clipboard bindings.*insertText/,
++    );
++  } finally {
++    if (previous === undefined) delete globalThis.ego;
++    else globalThis.ego = previous;
++  }
++});
++
+ test("Windows HTML clipboard offsets count UTF-8 bytes", () => {
+   const fragment = "<b>世界 🙂</b>";
+   const payload = __testing.windowsHtmlClipboardFormat(fragment);
+diff --git a/package/ego-browser/src/clipboard.ts b/package/ego-browser/src/clipboard.ts
+index ce08092..2254a2b 100644
+--- a/package/ego-browser/src/clipboard.ts
++++ b/package/ego-browser/src/clipboard.ts
+@@ -117,13 +117,62 @@ function beginNativeClipboardTransaction(
+ ): Promise<ClipboardTransaction> {
+   if (platform === "darwin") return beginDarwinClipboardTransaction(input);
+   if (platform === "win32") return beginWin32ClipboardTransaction(input);
++  if (platform === "linux") return beginBrowserClipboardTransaction(input);
+   return Promise.reject(
+     new Error(
+-      "page.keyboard.paste requires macOS or Windows clipboard support; use page.keyboard.insertText() for plain text",
++      "page.keyboard.paste requires macOS, Windows, or agentspace clipboard support; use page.keyboard.insertText() for plain text",
+     ),
+   );
+ }
+ 
++type BrowserClipboardBindings = {
++  beginClipboardTransaction?: (
++    content: ClipboardContent,
++  ) => Promise<{ transactionId?: string; error?: string }>;
++  finishClipboardTransaction?: (
++    transactionId: string,
++  ) => Promise<ClipboardTransactionStatus | { error?: string }>;
++};
++
++/**
++ * agentspace keeps the clipboard inside the browser that receives the
++ * paste: X11 and Wayland sessions share it with the desktop, and headless
++ * browsers have their own. The browser saves the previous value and restores
++ * it unless another writer changed the clipboard during the paste.
++ */
++async function beginBrowserClipboardTransaction(
++  input: ClipboardInput,
++): Promise<ClipboardTransaction> {
++  const ego = (globalThis as { ego?: BrowserClipboardBindings }).ego;
++  if (
++    typeof ego?.beginClipboardTransaction !== "function" ||
++    typeof ego.finishClipboardTransaction !== "function"
++  ) {
++    throw new Error(
++      "page.keyboard.paste on Linux requires agentspace clipboard bindings; use page.keyboard.insertText() for plain text",
++    );
++  }
++  const content = typeof input === "string" ? { text: input } : input;
++  const begun = await ego.beginClipboardTransaction(content);
++  if (!begun || typeof begun.transactionId !== "string") {
++    throw new Error(begun?.error || "could not prepare the browser clipboard");
++  }
++  const transactionId = begun.transactionId;
++  let finished = false;
++  return {
++    async finish() {
++      if (finished) throw new Error("clipboard transaction already finished");
++      finished = true;
++      const result = await ego.finishClipboardTransaction!(transactionId);
++      if (result === "restored" || result === "changed") return result;
++      throw new Error(
++        (result as { error?: string })?.error ||
++          "could not restore the browser clipboard",
++      );
++    },
++  };
++}
++
+ type ClipboardHost = {
+   platformName: string;
+   sendContent(stdin: Writable): void;

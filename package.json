@@ -1,0 +1,20 @@
+{
+  "name": "agentspace",
+  "version": "0.1.0",
+  "description": "Unofficial Linux browser service compatible with the ego-browser SDK: task spaces, accessibility snapshots and a scoped CDP bridge on stock Chromium.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "bin": {
+    "ego-browser": "bin/ego-browser"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build:sdk": "bash scripts/build-sdk.sh",
+    "test": "node --test test/*.test.mjs",
+    "e2e": "bash scripts/run-upstream-e2e.sh",
+    "bench": "node bench/run.mjs --out bench/results/headless.json"
+  }
+}

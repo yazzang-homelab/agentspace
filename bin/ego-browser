@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Launch ego-browser with a Node.js >= 22 runtime (the ego-browser SDK needs it).
+set -euo pipefail
+
+SELF="$(readlink -f "${BASH_SOURCE[0]}")"
+ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
+
+node_ok() {
+  local major
+  major="$("$1" -p 'process.versions.node.split(".")[0]' 2>/dev/null)" || return 1
+  [ "$major" -ge 22 ]
+}
+
+pick_node() {
+  local candidate
+  for candidate in "${AGENTSPACE_NODE:-}" "$ROOT/runtime/node/bin/node" "$(command -v node 2>/dev/null || true)"; do
+    if [ -n "$candidate" ] && [ -x "$candidate" ] && node_ok "$candidate"; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+NODE="$(pick_node)" || {
+  echo "ego-browser needs Node.js >= 22. Run $ROOT/install.sh to fetch one, or set AGENTSPACE_NODE." >&2
+  exit 1
+}
+exec "$NODE" "$ROOT/lib/cli.mjs" "$@"

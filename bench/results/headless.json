@@ -1,0 +1,118 @@
+{
+  "date": "2026-10-17T15:42:53.181Z",
+  "chromium": "Chromium 155.0.8059.79 built on Debian GNU/Linux 13 (trixie)",
+  "node": "v24.22.0",
+  "cpu": "Intel(R) Xeon(R) E-2124G CPU @ 3.40GHz",
+  "iterations": 5,
+  "agentspace": {
+    "coldStartMs": 684,
+    "noopRoundMs": 125,
+    "medianTaskMs": 3120,
+    "minTaskMs": 2853,
+    "maxTaskMs": 3193,
+    "memoryMiB": 950,
+    "perRound": [
+      {
+        "name": "open sign-in page",
+        "medianMs": 433,
+        "observationChars": 685,
+        "observationTokens": 171
+      },
+      {
+        "name": "sign in",
+        "medianMs": 659,
+        "observationChars": 2626,
+        "observationTokens": 657
+      },
+      {
+        "name": "search products",
+        "medianMs": 473,
+        "observationChars": 1460,
+        "observationTokens": 365
+      },
+      {
+        "name": "add item to cart",
+        "medianMs": 300,
+        "observationChars": 1463,
+        "observationTokens": 366
+      },
+      {
+        "name": "cart -> checkout",
+        "medianMs": 441,
+        "observationChars": 1010,
+        "observationTokens": 253
+      },
+      {
+        "name": "fill form, place order",
+        "medianMs": 793,
+        "observationChars": 476,
+        "observationTokens": 119
+      }
+    ],
+    "sampleSnapshot": "[p1 \"127.0.0.1:36149/shop?q=keyboard\" | space \"bench-0\"(2): 1 managed, 0 untracked — p1* \"127.0.0.1:36149/shop?q=keyboard\"]\nroot\n  banner\n    strong\n      text \"Bench Shop\"\n    navigation\n      link \"Products\" [ref=269, loc=href:/shop, url=http://127.0.0.1:36149/shop]\n      text \"·\"\n      link \"Cart (1)\" [ref=272, loc=href:/cart, url=http://127.0.0.1:36149/cart]\n  main\n    heading \"Products\" level=1\n    search\n      label_text\n        text \"Search\"\n        textbox \"Search\" value=\"keyboard\" [ref=251, loc=role:textbox[name=\"Search\"]]\n    paragraph\n      text \"4 results\"\n    heading \"Mechanical Keyboard K2\" level=2\n    paragraph\n      text \"$49.00\"\n    button \"Add Mechanical Keyboard K2 to cart\" disabled [ref=296, loc=role:button[name=\"Add Mechanical Keyboard K2 to cart\"]]\n      text \"Added\"\n    heading \"Mechanical Keyboard K8 Pro\" level=2\n    paragraph\n      text \"$62.00\"\n    button \"Add Mechanical Keyboard K8 Pro to cart\" [ref=305, loc=role:button[name=\"Add Mechanical Keyboard K8 Pro to cart\"]]\n      text \"Add to cart\"\n    heading \"Low-profile Keyboard\" level=2\n    paragraph\n      text \"$75.00\"\n    button \"Add Low-profile Keyboard to cart\" [ref=314, loc=role:button[name=\"Add Low-profile Keyboard to cart\"]]\n      text \"Add to cart\"\n    heading \"Keyboard Wrist Rest\" level=2\n    paragraph\n      text \"$88.00\"\n    button \"Add Keyboard Wrist Rest to cart\" [ref=323, loc=role:button[name=\"Add Keyboard Wrist Rest to cart\"]]\n      text \"Add to cart\"\n"
+  },
+  "rawChromium": {
+    "coldStartMs": 219,
+    "noopRoundMs": 99,
+    "medianTaskMs": 1358,
+    "minTaskMs": 1306,
+    "maxTaskMs": 1462,
+    "memoryMiB": 839,
+    "perRound": [
+      {
+        "name": "open sign-in page",
+        "medianMs": 229,
+        "screenshotBytes": 13290,
+        "screenshotSize": "1280x813",
+        "screenshotTokens": 1388,
+        "htmlChars": 1803,
+        "htmlTokens": 451
+      },
+      {
+        "name": "sign in",
+        "medianMs": 265,
+        "screenshotBytes": 46371,
+        "screenshotSize": "1265x813",
+        "screenshotTokens": 1371,
+        "htmlChars": 5287,
+        "htmlTokens": 1322
+      },
+      {
+        "name": "search products",
+        "medianMs": 212,
+        "screenshotBytes": 27866,
+        "screenshotSize": "1280x813",
+        "screenshotTokens": 1388,
+        "htmlChars": 2705,
+        "htmlTokens": 676
+      },
+      {
+        "name": "add item to cart",
+        "medianMs": 179,
+        "screenshotBytes": 28344,
+        "screenshotSize": "1280x813",
+        "screenshotTokens": 1388,
+        "htmlChars": 2711,
+        "htmlTokens": 678
+      },
+      {
+        "name": "cart -> checkout",
+        "medianMs": 216,
+        "screenshotBytes": 20158,
+        "screenshotSize": "1280x813",
+        "screenshotTokens": 1388,
+        "htmlChars": 2256,
+        "htmlTokens": 564
+      },
+      {
+        "name": "fill form, place order",
+        "medianMs": 263,
+        "screenshotBytes": 16268,
+        "screenshotSize": "1280x813",
+        "screenshotTokens": 1388,
+        "htmlChars": 1475,
+        "htmlTokens": 369
+      }
+    ]
+  }
+}
