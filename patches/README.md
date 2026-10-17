@@ -16,3 +16,17 @@
 3. 붙여넣기가 끝나면, 그사이 다른 쓰기가 없었을 때만 이전 값을 복원합니다.
 
 X11/Wayland 세션에서는 데스크톱 클립보드를, 헤드리스에서는 브라우저 내부 클립보드를 사용합니다. 패치에는 업스트림 단위 테스트(`clipboard.test.mjs`) 갱신도 포함되어 있습니다.
+
+## 0002-agentspace-command-names.patch
+
+SDK와 사용 가이드가 사람·에이전트에게 보여 주는 명령 이름을 agentspace CLI에 맞춥니다. 브라우저 API와 바인딩 계약은 바꾸지 않습니다.
+
+| 업스트림 | 패치 후 |
+| --- | --- |
+| `ego-browser nodejs` | `agentspace run` |
+| `ego-browser skill` | `agentspace guide` |
+| `ego-browser upgrade` | `agentspace upgrade` |
+| `[ego-browser:skill]`, `[ego-browser:notice]`, `[ego-browser:skill-stale]`, `[ego-browser:pages]` | `[agentspace:guide]`, `[agentspace:notice]`, `[agentspace:skill-stale]`, `[agentspace:pages]` |
+| 가이드 속 "Ego Lite", "ego-browser" 제품명 | agentspace |
+
+업스트림 단위 테스트와 real-browser E2E 케이스의 기대 문자열도 함께 바꿉니다. 패치를 적용한 업스트림 단위 테스트는 533개 모두 통과합니다.

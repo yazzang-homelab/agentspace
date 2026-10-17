@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Run the upstream ego-browser real-browser E2E suite (69 cases) against this
-# Linux implementation. The suite drives `ego-browser nodejs` exactly like it
-# drives the macOS app.
+# implementation. The runner invokes `<cli> nodejs --sdk-path <sdk>`; the
+# e2e-cli shim maps that onto `agentspace run`.
 #
-#   AGENTSPACE_UPSTREAM_DIR=/path/to/agentspace  reuse an existing checkout
+#   AGENTSPACE_UPSTREAM_DIR=/path/to/ego-lite  reuse a patched upstream checkout
 #   EGO_BROWSER_REAL_E2E_ONLY="case a,case b"  run selected cases
 set -euo pipefail
 
@@ -25,4 +25,4 @@ fi
 
 cd "$UPSTREAM/package/ego-browser"
 [ -d node_modules ] || CI=true npm ci --no-audit --no-fund --silent
-EGO_BROWSER_REAL_E2E_CLI="$ROOT/bin/ego-browser" npm run --silent e2e
+EGO_BROWSER_REAL_E2E_CLI="$ROOT/scripts/e2e-cli" npm run --silent e2e

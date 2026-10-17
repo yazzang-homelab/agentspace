@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 
 import { findChromium } from "../lib/chromium.mjs";
 
-const CLI = fileURLToPath(new URL("../bin/ego-browser", import.meta.url));
+const CLI = fileURLToPath(new URL("../bin/agentspace", import.meta.url));
 const DAEMON = fileURLToPath(new URL("../lib/cli.mjs", import.meta.url));
 
 let chromiumAvailable = true;
@@ -55,7 +55,7 @@ function run(args, input) {
 }
 
 function cli(script) {
-  return run(["nodejs"], script);
+  return run(["run"], script);
 }
 
 async function json(script) {
@@ -222,17 +222,19 @@ test("completing a space hands it to the user and closing removes it", { skip: !
   assert.ok(!result.some(([name]) => name === "browser-test"), JSON.stringify(result));
 });
 
-test("CLI errors use the native messages and exit codes", { skip: !chromiumAvailable }, async () => {
+test("CLI errors, exit codes and the guide", { skip: !chromiumAvailable }, async () => {
   const unknown = await run(["bogus"]);
   assert.equal(unknown.code, 2);
   assert.match(unknown.stderr, /^Unknown command: bogus/);
-  const invalid = await run(["--ego-server-name=a b", "help"]);
-  assert.equal(invalid.code, 1);
-  assert.match(invalid.stderr, /Invalid --ego-server-name value/);
+  const invalid = await run(["--instance", "a b", "help"]);
+  assert.equal(invalid.code, 2);
+  assert.match(invalid.stderr, /Invalid --instance value/);
   const failing = await cli("throw new Error('boom');");
   assert.equal(failing.code, 1);
   assert.match(failing.stderr, /Error: boom/);
-  const skill = await run(["skill"]);
-  assert.equal(skill.code, 0);
-  assert.match(skill.stdout, /\[ego-browser:skill\] end of guide/);
+  const guide = await run(["guide"]);
+  assert.equal(guide.code, 0);
+  assert.match(guide.stdout, /\[agentspace:guide\] end of guide/);
+  const oldCommand = await run(["nodejs", "-e", "1"]);
+  assert.equal(oldCommand.code, 2);
 });

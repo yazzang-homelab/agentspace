@@ -7,9 +7,8 @@ AI 에이전트와 사람이 같은 브라우저를 나눠 쓰기 위한 Linux�
 ## 특징
 
 - **ego-browser SDK 호환**
-  - `ego-browser` CLI(`nodejs`, `skill`, `import`, `upgrade`, `help`, `--ego-server-name`)
-  - `globalThis.ego` 바인딩: [native-bindings-api.md](https://github.com/citrolabs/ego-lite/blob/main/docs/native-bindings-api.md) 기준
-  - 위 두 가지를 제공하므로 SDK와 에이전트 스킬을 수정 없이 사용할 수 있습니다.
+  - `globalThis.ego` 바인딩을 [native-bindings-api.md](https://github.com/citrolabs/ego-lite/blob/main/docs/native-bindings-api.md) 기준으로 구현했습니다.
+  - SDK의 브라우저 API(`taskSpace`, `page.snapshot()`, `page.click()` 등)는 그대로 씁니다. 바꾼 것은 명령 이름과 안내 문구뿐입니다(`patches/`).
 - **태스크 스페이스**
   - 에이전트 작업마다 별도 창을 씁니다. 그 창에서 열린 팝업도 같은 스페이스에 속합니다.
   - 에이전트는 자기 스페이스의 탭만 보고 조작할 수 있습니다. 원시 CDP 메시지도 스페이스 단위로 걸러집니다.
@@ -25,7 +24,7 @@ AI 에이전트와 사람이 같은 브라우저를 나눠 쓰기 위한 Linux�
 ## 구조
 
 ```
-ego-browser (CLI) ──unix socket──▶ agentspace daemon
+agentspace (CLI) ──unix socket──▶ agentspace daemon
                                      ├─ Chromium (프로필별, CDP)
                                      ├─ 스페이스 레지스트리
                                      ├─ Node 헬퍼 (스크립트 실행: globalThis.ego + SDK)
@@ -34,7 +33,7 @@ ego-browser (CLI) ──unix socket──▶ agentspace daemon
 
 | 파일 | 역할 |
 | --- | --- |
-| `lib/cli.mjs` | `ego-browser` 명령 |
+| `lib/cli.mjs` | `agentspace` 명령 |
 | `lib/daemon.mjs` | 데몬, 스페이스 관리, RPC, 제어판 서버 |
 | `lib/browser-host.mjs`, `lib/chromium.mjs` | Chromium 실행과 브라우저 수준 CDP 연결 |
 | `lib/channel.mjs` | 스페이스별 CDP 다중화·필터링, JS 다이얼로그 유지 |
@@ -43,7 +42,8 @@ ego-browser (CLI) ──unix socket──▶ agentspace daemon
 | `lib/clipboard.mjs` | `page.keyboard.paste()`용 브라우저 클립보드 트랜잭션 |
 | `lib/importer.mjs`, `lib/profiles.mjs` | 프로필 관리와 가져오기 |
 | `sdk/` | 업스트림 ego-browser SDK 빌드본 (MIT, `sdk/UPSTREAM.json`) |
-| `patches/` | SDK에 적용하는 Linux 지원 패치 |
+| `patches/` | SDK에 적용하는 패치 (Linux 클립보드, 명령 이름) |
+| `skill/` | 에이전트 진입 스킬 |
 
 ## 설치
 
@@ -61,8 +61,8 @@ git clone https://github.com/yazzang-homelab/agentspace.git ~/.local/opt/agentsp
 
 설치 스크립트가 하는 일:
 
-- `~/.local/bin/ego-browser` 링크를 만듭니다.
-- 에이전트 스킬을 `~/.agents/skills/ego-browser`에 복사합니다.
+- `~/.local/bin/agentspace` 링크를 만듭니다.
+- 에이전트 스킬을 `~/.agents/skills/agentspace`에 복사합니다.
 - `agentspace.desktop`을 설치합니다.
 - systemd 사용자 서비스 `agentspace.service`를 등록합니다.
 
@@ -71,22 +71,27 @@ git clone https://github.com/yazzang-homelab/agentspace.git ~/.local/opt/agentsp
 ## 사용
 
 ```bash
-ego-browser start      # 데몬과 기본 프로필 브라우저 시작
-ego-browser skill      # 에이전트용 사용 가이드 출력
-ego-browser nodejs <<'EOF'
+agentspace start        # 데몬과 기본 프로필 브라우저 시작
+agentspace guide        # 에이전트용 사용 가이드 출력
+agentspace run <<'EOF'
 const task = await taskSpace("example");
 const page = task.page("p1");
 await page.goto("https://example.com");
 console.log(await page.snapshot());
 EOF
-ego-browser panel      # 스페이스 제어판 URL (화면이 있으면 창으로 엽니다)
-ego-browser open <url> # 사용자용 창 열기
-ego-browser import list
-ego-browser import --browser chrome --profile Default
-ego-browser status | stop | upgrade
+agentspace run task.mjs # 파일로 실행 (-e '<코드>'도 가능, 터미널에서 인자 없이 실행하면 REPL)
+agentspace panel        # 스페이스 제어판 URL (화면이 있으면 창으로 엽니다)
+agentspace open <url>   # 사용자용 창 열기
+agentspace profiles     # 프로필 목록
+agentspace profiles detect
+agentspace profiles import chrome Default
+agentspace status | stop | upgrade
+agentspace help <명령>  # 명령별 도움말
 ```
 
-데몬은 `ego-browser`를 처음 실행할 때 자동으로 시작합니다. 에이전트 하네스가 명령이 끝날 때 자식 프로세스를 정리한다면, 데몬이 함께 종료되지 않도록 systemd 사용자 서비스로 띄워 두세요.
+`-i, --instance <이름>`을 주면 데이터와 소켓이 분리된 별도 인스턴스를 씁니다.
+
+데몬은 `agentspace` 명령을 처음 실행할 때 자동으로 시작합니다. 에이전트 하네스가 명령이 끝날 때 자식 프로세스를 정리한다면, 데몬이 함께 종료되지 않도록 systemd 사용자 서비스로 띄워 두세요.
 
 ### 환경 변수
 
@@ -99,7 +104,7 @@ ego-browser status | stop | upgrade
 | `AGENTSPACE_NODE` | Node.js 22 이상 실행 파일 |
 | `AGENTSPACE_AGENT_CURSOR` | `0`이면 에이전트 커서 표시를 끕니다. |
 
-Node 헬퍼는 호출한 셸의 환경 변수와 작업 디렉터리를 물려받지 않습니다. `~/.ego-browser/debug/index.js`가 있으면 번들 SDK 대신 그 SDK를 씁니다. `--sdk-path`를 주면 그것이 가장 우선입니다.
+Node 헬퍼는 호출한 셸의 환경 변수와 작업 디렉터리를 물려받지 않습니다. `agentspace run --sdk-path <index.js>`로 번들 SDK 대신 다른 SDK 빌드를 쓸 수 있습니다.
 
 ## 개발
 

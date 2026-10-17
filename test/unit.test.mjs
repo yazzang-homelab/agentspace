@@ -5,18 +5,18 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { parseImportArgs } from "../lib/importer.mjs";
-import { servicePaths, validServerName } from "../lib/paths.mjs";
+import { servicePaths, validInstanceName } from "../lib/paths.mjs";
 import { normalizeSnapshotOptions, roleName } from "../lib/snapshot.mjs";
 import { compileScript } from "../lib/node-host.mjs";
 import { ProfileStore } from "../lib/profiles.mjs";
 import { createEgoBindings } from "../lib/ego-client.mjs";
 
-test("server names follow the native --ego-server-name rules", () => {
-  assert.equal(validServerName("app-a.1_b"), true);
-  assert.equal(validServerName(""), false);
-  assert.equal(validServerName("a b"), false);
-  assert.equal(validServerName("../x"), false);
-  assert.throws(() => servicePaths("a/b"), /Invalid --ego-server-name value/);
+test("instance names are 1-64 safe characters", () => {
+  assert.equal(validInstanceName("app-a.1_b"), true);
+  assert.equal(validInstanceName(""), false);
+  assert.equal(validInstanceName("a b"), false);
+  assert.equal(validInstanceName("../x"), false);
+  assert.throws(() => servicePaths("a/b"), /Invalid --instance value/);
 });
 
 test("named services get separate data and sockets", () => {
@@ -26,7 +26,7 @@ test("named services get separate data and sockets", () => {
     const main = servicePaths("default");
     const other = servicePaths("app-a");
     assert.equal(main.dataDir, "/tmp/ego-unit-home");
-    assert.equal(other.dataDir, "/tmp/ego-unit-home/servers/app-a");
+    assert.equal(other.dataDir, "/tmp/ego-unit-home/instances/app-a");
     assert.notEqual(main.socketPath, other.socketPath);
   } finally {
     if (previous === undefined) delete process.env.AGENTSPACE_HOME;
@@ -34,27 +34,22 @@ test("named services get separate data and sockets", () => {
   }
 });
 
-test("import arguments group profiles under the latest --browser block", () => {
-  const parsed = parseImportArgs([
-    "--browser",
-    "chrome",
-    "--profile",
-    "Default",
-    "Profile 1",
-    "--browser",
-    "brave",
-    "--clear-existing-profiles",
-    "--no-default",
-  ]);
-  assert.deepEqual(parsed.blocks, [
-    { browser: "chrome", profiles: ["Default", "Profile 1"] },
-    { browser: "brave", profiles: [] },
-  ]);
-  assert.equal(parsed.clearExistingProfiles, true);
-  assert.equal(parsed.setDefault, false);
-  assert.throws(() => parseImportArgs(["--browser", "safari"]), /Unsupported browser: safari/);
-  assert.throws(() => parseImportArgs(["--profile", "Default"]), /must follow a --browser block/);
-  assert.throws(() => parseImportArgs([]), /--browser/);
+test("profiles import takes one browser, optional profile dirs and flags", () => {
+  assert.deepEqual(parseImportArgs(["chrome", "Default", "Profile 1", "--replace"]), {
+    browser: "chrome",
+    profiles: ["Default", "Profile 1"],
+    replace: true,
+    setDefaultBrowser: false,
+  });
+  assert.deepEqual(parseImportArgs(["--set-default-browser", "brave"]), {
+    browser: "brave",
+    profiles: [],
+    replace: false,
+    setDefaultBrowser: true,
+  });
+  assert.throws(() => parseImportArgs(["safari"]), /Unsupported browser: safari/);
+  assert.throws(() => parseImportArgs(["chrome", "--no-default"]), /Unknown import option: --no-default/);
+  assert.throws(() => parseImportArgs([]), /profiles detect/);
 });
 
 test("snapshot role names use the native snake_case vocabulary", () => {

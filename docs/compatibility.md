@@ -10,14 +10,18 @@ agentspace는 ego-browser SDK가 기대하는 호스트 계약을 Linux에서 �
 
 ## CLI
 
-| 명령 | 동작 |
-| --- | --- |
-| `nodejs [-e <script> \| < file \| REPL] [--sdk-path <path>]` | `globalThis.ego`와 SDK를 설치한 Node 헬퍼에서 스크립트를 실행합니다. top-level await를 지원하고, REPL은 `.cell`/`.end`/`.cancel`/`.exit`를 받습니다(입력 하나당 64 MiB). |
-| `skill [--sdk-path <path>]` | SDK `index.js` 옆의 `ego-browser/SKILL.md`를 출력합니다. |
-| `import list \| --browser <b> [--profile <dir>...] [--clear-existing-profiles] [--no-default]` | Chromium 계열 프로필을 새 프로필로 복사합니다. |
-| `upgrade` | 설치 위치를 `git pull --ff-only`로 업데이트하고 데몬을 재시작합니다. |
-| `--ego-server-name=<name>` | 이름별로 데이터·소켓을 분리한 별도 서비스를 씁니다. |
-| `start`, `stop`, `status`, `open`, `panel` | agentspace 전용 수명 주기 명령입니다. |
+CLI는 agentspace 고유 명령 체계를 씁니다. 업스트림 macOS 앱의 `ego-browser` 명령과는 이름이 다르며, 대응 관계는 다음과 같습니다.
+
+| agentspace | 업스트림 대응 | 동작 |
+| --- | --- | --- |
+| `run [file] [-e <code>] [--sdk-path <path>]` | `nodejs` | `globalThis.ego`와 SDK를 설치한 Node 헬퍼에서 스크립트를 실행합니다. 파일, `-e`, stdin을 받고 터미널에서는 REPL(`.cell`/`.end`/`.cancel`/`.exit`, 입력 하나당 64 MiB)을 엽니다. top-level await를 지원합니다. |
+| `guide [--sdk-path <path>]` | `skill` | SDK `index.js` 옆의 사용 가이드를 출력합니다. 끝 줄은 `[agentspace:guide] end of guide v<버전>`입니다. |
+| `profiles`, `profiles detect`, `profiles import <browser> [<dir>...] [--replace] [--set-default-browser]` | `import` | 프로필 목록, 가져올 수 있는 프로필 탐지, Chromium 계열 프로필 복사. 기본 브라우저 등록은 명시적으로 요청할 때만 합니다. |
+| `upgrade` | `upgrade` | 설치 위치를 `git pull --ff-only`로 업데이트하고 데몬을 재시작합니다. |
+| `-i, --instance <name>` | `--ego-server-name` | 이름별로 데이터·소켓을 분리한 별도 인스턴스를 씁니다. |
+| `start`, `stop`, `status`, `open <url>`, `panel` | 없음 | 수명 주기와 제어판 명령입니다. |
+
+SDK가 출력하는 안내 문구(`[agentspace:notice]`, `[agentspace:skill-stale]`, `[agentspace:pages]`)와 사용 가이드 속 명령 이름은 `patches/0002-agentspace-command-names.patch`로 바꿉니다. `EGO_*` 오류 코드와 `globalThis.ego` 바인딩 이름은 SDK 계약이라 그대로 둡니다.
 
 ## 바인딩 (`globalThis.ego`)
 
@@ -72,7 +76,7 @@ Linux용 확장 바인딩이 두 개 있습니다: `beginClipboardTransaction`, 
 
 ## 검증
 
-업스트림 `package/ego-browser/scripts/run-real-browser-e2e.mjs`는 69개 케이스로 SDK를 실제 브라우저에서 검증합니다. 이 스위트를 `EGO_BROWSER_REAL_E2E_CLI=bin/ego-browser`로 실행해(`npm run e2e`) Chromium 155에서 다음 결과를 확인했습니다.
+업스트림 `package/ego-browser/scripts/run-real-browser-e2e.mjs`는 69개 케이스로 SDK를 실제 브라우저에서 검증합니다. 러너는 `<cli> nodejs --sdk-path <sdk>` 형식으로 CLI를 부르므로, 이를 `agentspace run`으로 넘겨주는 `scripts/e2e-cli`를 `EGO_BROWSER_REAL_E2E_CLI`로 지정해 실행합니다(`npm run e2e`). 그 결과 Chromium 155에서 다음 결과를 확인했습니다.
 
 - 헤드리스: 69/69 통과
 - Xvfb 위 헤드풀: 69/69 통과

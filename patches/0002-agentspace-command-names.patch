@@ -1,0 +1,341 @@
+diff --git a/package/ego-browser/scripts/build.mjs b/package/ego-browser/scripts/build.mjs
+index 7505091..9c4e294 100644
+--- a/package/ego-browser/scripts/build.mjs
++++ b/package/ego-browser/scripts/build.mjs
+@@ -23,7 +23,7 @@ const distDir = join(root, "dist");
+ const outDir = join(distDir, "out");
+ const bundledCliDir = outDir;
+ const bundledCli = join(bundledCliDir, "index.js");
+-// The usage guide printed by `ego-browser skill`, versioned with this SDK.
++// The usage guide printed by `agentspace guide`, versioned with this SDK.
+ const guideSource = join(root, "skill-body", "SKILL.md");
+ const bundledGuideDir = join(outDir, "ego-browser");
+ // The entry Skill the browser installs into ~/.agents/skills/ego-browser. It
+@@ -114,7 +114,7 @@ try {
+ }
+ 
+ // Replace the source frontmatter with the version line and end marker that
+-// `ego-browser skill` prints verbatim; agents use the marker to detect truncation.
++// `agentspace guide` prints verbatim; agents use the marker to detect truncation.
+ function renderGuide(source) {
+   const match = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/.exec(source);
+   const version = match && /^version: "([^"]+)"$/m.exec(match[1])?.[1];
+@@ -122,11 +122,11 @@ function renderGuide(source) {
+     throw new Error(`${guideSource} needs frontmatter with a version`);
+   }
+   const guide = [
+-    `[ego-browser:skill] ego-browser usage guide v${version}`,
++    `[agentspace:guide] agentspace usage guide v${version}`,
+     "",
+     match[2].trim(),
+     "",
+-    `[ego-browser:skill] end of guide v${version}`,
++    `[agentspace:guide] end of guide v${version}`,
+     "",
+   ].join("\n");
+   if (guide.length > maxGuideLength) {
+diff --git a/package/ego-browser/scripts/real-browser-e2e/cases/index.mjs b/package/ego-browser/scripts/real-browser-e2e/cases/index.mjs
+index 3414840..518b8eb 100644
+--- a/package/ego-browser/scripts/real-browser-e2e/cases/index.mjs
++++ b/package/ego-browser/scripts/real-browser-e2e/cases/index.mjs
+@@ -197,7 +197,7 @@ export const e2eCases = [
+   {
+     name: "Page delayed popup: resume",
+     body: pageDelayedPopupResumeCase,
+-    forbiddenOutput: "[ego-browser:pages]",
++    forbiddenOutput: "[agentspace:pages]",
+   },
+   { name: "v1 and v2 action parity", body: v1V2ActionParityCase },
+   { name: "portable keyboard workflow", body: portableKeyboardWorkflowCase },
+diff --git a/package/ego-browser/skill-body/SKILL.md b/package/ego-browser/skill-body/SKILL.md
+index d4d4545..0ab196a 100644
+--- a/package/ego-browser/skill-body/SKILL.md
++++ b/package/ego-browser/skill-body/SKILL.md
+@@ -3,22 +3,22 @@ version: "2.1.0"
+ date: "2026-10-08"
+ ---
+ 
+-# ego-browser
++# agentspace
+ 
+ Call `help()` or `help("page.click")` to print signatures and uncommon options
+ of APIs named below; it prints by itself, so do not wrap it in `console.log`.
+ For installation or connection problems, read `references/install.md` in the
+-ego-browser Skill directory.
++agentspace Skill directory.
+ 
+ ## Run browser scripts
+ 
+-Pass the script to `ego-browser nodejs`. The form depends on the shell that runs
++Pass the script to `agentspace run`. The form depends on the shell that runs
+ the command: heredoc is Bash/Zsh syntax and does not exist in PowerShell or cmd.
+ 
+ ### Bash, Zsh, Git Bash
+ 
+ ```bash
+-ego-browser nodejs <<'EOF'
++agentspace run <<'EOF'
+ const task = await taskSpace("inspect example page");
+ const page = task.page("p1");
+ await page.goto("https://example.com");
+@@ -33,7 +33,7 @@ the code and double quotes for JavaScript strings; single quotes within the code
+ require shell quoting.
+ 
+ ```bash
+-ego-browser nodejs -e '
++agentspace run -e '
+ const task = await taskSpace("inspect example page");
+ await task.page("p1").goto("https://example.com");
+ console.log(task.spaceId);
+@@ -49,7 +49,7 @@ several lines to `-e`. Write it to a UTF-8 `.mjs` file instead and evaluate an
+ ASCII-only one-line entry point, which needs no double quotes of its own:
+ 
+ ```powershell
+-ego-browser nodejs -e "await import('file:///C:/Users/<name>/ego/task.mjs')"
++agentspace run -e "await import('file:///C:/Users/<name>/ego/task.mjs')"
+ ```
+ 
+ The imported module runs with the same helpers and `console` as an inline
+@@ -67,7 +67,7 @@ cmd has no heredoc, but it does support input redirection, so it can run the
+ same `.mjs` file directly:
+ 
+ ```bat
+-ego-browser nodejs < C:\Users\<name>\ego\task.mjs
++agentspace run < C:\Users\<name>\ego\task.mjs
+ ```
+ 
+ ### Later rounds with a script file
+@@ -98,7 +98,7 @@ with dynamic imports such as `await import("node:fs/promises")`. The script
+ does not run in your shell's working directory, so use absolute paths for every
+ file it reads or writes. It also does not inherit your shell's environment
+ variables: `process.env` will not contain values you set before running
+-`ego-browser`, so write every input directly into the script.
++`agentspace run`, so write every input directly into the script.
+ 
+ Ego-browser deliberately exposes a small custom API. It is not Playwright, even
+ where method names and options look similar. Use only the TaskSpace, Page,
+@@ -117,7 +117,7 @@ as `fill()`, `press()`, `focus()`, `selectOption()`, `waitForSelector()`,
+ The `label` in `selectOption(selector, { label })` is different: it selects the
+ option whose visible text matches.
+ 
+-When the user explicitly asks for ego-browser, start with a real browser command
++When the user explicitly asks for agentspace, start with a real browser command
+ and diagnose the CLI or installation only if it fails.
+ 
+ ## Spaces, rounds, and pages
+@@ -148,7 +148,7 @@ await source.goto("https://example.com/releases");
+ ```
+ 
+ Do not inspect or select profiles unless the user explicitly requests a
+-particular Ego Lite profile. A `profileId` applies only when creating a space;
++particular agentspace profile. A `profileId` applies only when creating a space;
+ use `help("profiles")` for the exact workflow.
+ 
+ Supported TaskSpace API:
+@@ -189,7 +189,7 @@ as user-owned when deciding whether a Page may be closed.
+ 
+ ## Page operations
+ 
+-ego-browser provides the following Page API:
++agentspace provides the following Page API:
+ 
+ - State and observation: `label`, `spaceId`, `openedBy`, `targetId`, `url()`,
+   `title()`, `info()`, `snapshot()`, `screenshot()`
+@@ -539,13 +539,13 @@ list the Pages to keep instead.
+ Use `page.close()` only while the task is still in progress. Do not call
+ `finish()` when the task stops for user control or an error.
+ 
+-If the final output contains `[ego-browser:notice]`, finish the current browser
+-task, tell the user an Ego Lite update is available, and run
+-`ego-browser upgrade` only with their approval. Run `ego-browser skill` again
++If the final output contains `[agentspace:notice]`, finish the current browser
++task, tell the user an agentspace update is available, and run
++`agentspace upgrade` only with their approval. Run `agentspace guide` again
+ after the upgrade.
+ 
+ ## Clearing cookies, cache, and storage
+ 
+ Before clearing any cookie, cache, or storage, read
+-`references/clearing-state.md` in the ego-browser Skill directory. Some clears
++`references/clearing-state.md` in the agentspace Skill directory. Some clears
+ reach the whole browser profile.
+diff --git a/package/ego-browser/src/output-sink.test.mjs b/package/ego-browser/src/output-sink.test.mjs
+index c83db0b..388b208 100644
+--- a/package/ego-browser/src/output-sink.test.mjs
++++ b/package/ego-browser/src/output-sink.test.mjs
+@@ -125,7 +125,7 @@ test("flushSink appends unhandled pages after the script output", () => {
+ 
+   assert.equal(
+     out.text(),
+-    "saved rows\n[ego-browser:pages]\nUnhandled page p4 from p1: https://example.test/popup\n",
++    "saved rows\n[agentspace:pages]\nUnhandled page p4 from p1: https://example.test/popup\n",
+   );
+ });
+ 
+diff --git a/package/ego-browser/src/output-sink.ts b/package/ego-browser/src/output-sink.ts
+index 8cd84e8..b5bf02f 100644
+--- a/package/ego-browser/src/output-sink.ts
++++ b/package/ego-browser/src/output-sink.ts
+@@ -104,7 +104,7 @@ function formatPageNotices(notices: UnhandledPageNotice[]): string {
+     const url = oneLine(notice.url || "about:blank");
+     return `Unhandled page ${notice.label}${source}: ${url}`;
+   });
+-  return `[ego-browser:pages]\n${lines.join("\n")}\n`;
++  return `[agentspace:pages]\n${lines.join("\n")}\n`;
+ }
+ 
+ function oneLine(value: string): string {
+diff --git a/package/ego-browser/src/run-output-sink.test.mjs b/package/ego-browser/src/run-output-sink.test.mjs
+index fa8b4f5..5bd07bd 100644
+--- a/package/ego-browser/src/run-output-sink.test.mjs
++++ b/package/ego-browser/src/run-output-sink.test.mjs
+@@ -184,11 +184,11 @@ test("a swallowed 1.3 skill mismatch discards business output and explains recov
+   `);
+ 
+   assert.equal(result.exitCode, 0);
+-  assert.match(result.stdout, /\[ego-browser:skill-stale\]/);
+-  assert.match(result.stdout, /Run `ego-browser skill`/);
++  assert.match(result.stdout, /\[agentspace:skill-stale\]/);
++  assert.match(result.stdout, /Run `agentspace guide`/);
+   assert.match(result.stdout, /taskSpace\(nameOrId\)/);
+   assert.doesNotMatch(result.stdout, /before stale|caught:|after stale/);
+-  assert.equal(result.stdout.match(/\[ego-browser:skill-stale\]/g).length, 1);
++  assert.equal(result.stdout.match(/\[agentspace:skill-stale\]/g).length, 1);
+ });
+ 
+ test("a permission hard stop discards business output and keeps its specific guidance", async () => {
+diff --git a/package/ego-browser/src/run.ts b/package/ego-browser/src/run.ts
+index 429631c..0f18a38 100644
+--- a/package/ego-browser/src/run.ts
++++ b/package/ego-browser/src/run.ts
+@@ -34,12 +34,12 @@ export type RunMainOptions = {
+   stdinText?: string;
+ };
+ 
+-export const HELP = `ego-browser
++export const HELP = `agentspace run
+ 
+-Read the ego-browser skill for the default workflow and examples.
++Run \`agentspace guide\` for the default workflow and examples.
+ 
+ Typical usage:
+-  ego-browser <<'JS'
++  agentspace run <<'JS'
+   const task = await taskSpace('demo')
+   const page = task.page('p1')
+   await page.goto('https://example.com')
+@@ -50,7 +50,7 @@ Helpers are pre-imported and the browser connection is prepared automatically.
+ `;
+ 
+ export const USAGE = `Usage:
+-  ego-browser <<'JS'
++  agentspace run <<'JS'
+   const task = await taskSpace('demo')
+   const page = task.page('p1')
+   await page.goto('https://example.com')
+diff --git a/package/ego-browser/src/skill-migration.test.mjs b/package/ego-browser/src/skill-migration.test.mjs
+index a9fa300..4e5ae4f 100644
+--- a/package/ego-browser/src/skill-migration.test.mjs
++++ b/package/ego-browser/src/skill-migration.test.mjs
+@@ -17,7 +17,7 @@ test("the 1.3 egoBrowser namespace stops with current API guidance", () => {
+         assert.equal(error.name, "EgoBrowserSkillStaleError");
+         assert.ok(error.message.startsWith(STALE_SKILL_PREFIX));
+         assert.match(error.message, new RegExp(`egoBrowser\\.${method}`));
+-        assert.match(error.message, /Run `ego-browser skill`/);
++        assert.match(error.message, /Run `agentspace guide`/);
+         assert.match(error.message, /taskSpace\(nameOrId\)/);
+         return true;
+       },
+diff --git a/package/ego-browser/src/skill-migration.ts b/package/ego-browser/src/skill-migration.ts
+index 643ac12..d67ee80 100644
+--- a/package/ego-browser/src/skill-migration.ts
++++ b/package/ego-browser/src/skill-migration.ts
+@@ -1,6 +1,6 @@
+ import { markHardStop } from "./output-sink.js";
+ 
+-export const STALE_SKILL_PREFIX = "[ego-browser:skill-stale]";
++export const STALE_SKILL_PREFIX = "[agentspace:skill-stale]";
+ 
+ // These are the public top-level members exposed by the formal 1.3 Skill. Keep
+ // the guard narrow: 1.2.3 globals remain supported, while unpublished beta
+@@ -27,7 +27,7 @@ export class EgoBrowserSkillStaleError extends Error {
+     super(
+       [
+         `${STALE_SKILL_PREFIX} This script uses the old egoBrowser.${member} API.`,
+-        "Run `ego-browser skill` to read the current usage guide, then retry with the TaskSpace/Page API. Start with:",
++        "Run `agentspace guide` to read the current usage guide, then retry with the TaskSpace/Page API. Start with:",
+         "  const task = await taskSpace(nameOrId)",
+       ].join("\n"),
+     );
+diff --git a/package/ego-browser/src/skill-package.test.mjs b/package/ego-browser/src/skill-package.test.mjs
+index a55fe6d..be2ac29 100644
+--- a/package/ego-browser/src/skill-package.test.mjs
++++ b/package/ego-browser/src/skill-package.test.mjs
+@@ -19,9 +19,9 @@ test("the bundled usage guide is the source guide between version and end marker
+   assert.deepEqual(await readdir(join(outDir, "ego-browser")), ["SKILL.md"]);
+   assert.equal(
+     lines[0],
+-    `[ego-browser:skill] ego-browser usage guide v${version}`,
++    `[agentspace:guide] agentspace usage guide v${version}`,
+   );
+-  assert.equal(lines.at(-1), `[ego-browser:skill] end of guide v${version}`);
++  assert.equal(lines.at(-1), `[agentspace:guide] end of guide v${version}`);
+   assert.ok(
+     bundled.includes(source.replace(/^---\n[\s\S]*?\n---\n/, "").trim()),
+   );
+diff --git a/package/ego-browser/src/update-notice.test.mjs b/package/ego-browser/src/update-notice.test.mjs
+index 9f942f5..fc71863 100644
+--- a/package/ego-browser/src/update-notice.test.mjs
++++ b/package/ego-browser/src/update-notice.test.mjs
+@@ -28,9 +28,9 @@ test("update notice is emitted only for a valid available update", async () => {
+   );
+   assert.equal(lines.length, 1);
+   const [line] = lines;
+-  assert.match(line, /^\[ego-browser:notice\]/);
++  assert.match(line, /^\[agentspace:notice\]/);
+   assert.match(line, /current 0\.5\.0\.5/);
+-  assert.match(line, /ego-browser upgrade/);
++  assert.match(line, /agentspace upgrade/);
+   assert.match(line, /ask the user/i);
+ });
+ 
+@@ -66,8 +66,8 @@ test("SDK startup appends one update notice on a clean run", () => {
+   `);
+ 
+   assert.equal(result.status, 0, result.stderr);
+-  assert.equal(result.stdout.match(/\[ego-browser:notice\]/g)?.length, 1);
+-  assert.match(result.stdout, /ego-browser upgrade/);
++  assert.equal(result.stdout.match(/\[agentspace:notice\]/g)?.length, 1);
++  assert.match(result.stdout, /agentspace upgrade/);
+ });
+ 
+ test("a hard stop discards a queued update notice", () => {
+@@ -85,8 +85,8 @@ test("a hard stop discards a queued update notice", () => {
+   `);
+ 
+   assert.equal(result.status, 0, result.stderr);
+-  assert.match(result.stdout, /\[ego-browser:skill-stale\]/);
+-  assert.doesNotMatch(result.stdout, /\[ego-browser:notice\]/);
++  assert.match(result.stdout, /\[agentspace:skill-stale\]/);
++  assert.doesNotMatch(result.stdout, /\[agentspace:notice\]/);
+ });
+ 
+ function runSdk(source) {
+diff --git a/package/ego-browser/src/update-notice.ts b/package/ego-browser/src/update-notice.ts
+index d5ca457..45953f7 100644
+--- a/package/ego-browser/src/update-notice.ts
++++ b/package/ego-browser/src/update-notice.ts
+@@ -28,10 +28,10 @@ export async function emitUpdateNotice(
+       return;
+     }
+     emit(
+-      `[ego-browser:notice] Ego Lite update is available ` +
++      `[agentspace:notice] An agentspace update is available ` +
+         `(current ${info.currentVersion.trim()}). Finish the current browser task, ` +
+-        "then ask the user before running `ego-browser upgrade`; re-read the " +
+-        "ego-browser Skill afterward.",
++        "then ask the user before running `agentspace upgrade`; re-run " +
++        "`agentspace guide` afterward.",
+     );
+   } catch {
+     // An optional update hint must never fail the browser task.

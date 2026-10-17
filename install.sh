@@ -10,7 +10,7 @@ NODE_VERSION="${AGENTSPACE_NODE_VERSION:-v24.11.1}"
 BIN_DIR="${XDG_BIN_HOME:-$HOME/.local/bin}"
 APP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
 UNIT_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
-SKILL_DIR="$HOME/.agents/skills/ego-browser"
+SKILL_DIR="$HOME/.agents/skills/agentspace"
 
 say() { printf '==> %s\n' "$*"; }
 
@@ -19,11 +19,11 @@ node_major() {
 }
 
 if [ "${1:-}" = "--uninstall" ]; then
-  "$ROOT/bin/ego-browser" stop >/dev/null 2>&1 || true
+  "$ROOT/bin/agentspace" stop >/dev/null 2>&1 || true
   if command -v systemctl >/dev/null && systemctl --user show-environment >/dev/null 2>&1; then
     systemctl --user disable --now agentspace.service >/dev/null 2>&1 || true
   fi
-  rm -f "$BIN_DIR/ego-browser" "$APP_DIR/agentspace.desktop" "$UNIT_DIR/agentspace.service"
+  rm -f "$BIN_DIR/agentspace" "$APP_DIR/agentspace.desktop" "$UNIT_DIR/agentspace.service"
   rm -rf "$SKILL_DIR"
   say "Removed agentspace. Profiles and Spaces remain in ${AGENTSPACE_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/agentspace}."
   exit 0
@@ -42,7 +42,7 @@ if ! command -v chromium >/dev/null && ! command -v chromium-browser >/dev/null 
   exit 1
 fi
 
-# 2. Node.js >= 22 (the ego-browser SDK requires it)
+# 2. Node.js >= 22 (the bundled SDK requires it)
 SYSTEM_NODE="$(command -v node || true)"
 if [ -n "${AGENTSPACE_NODE:-}" ] && [ "$(node_major "$AGENTSPACE_NODE")" -ge 22 ]; then
   say "Using AGENTSPACE_NODE=$AGENTSPACE_NODE"
@@ -70,18 +70,20 @@ fi
 
 # 3. CLI on PATH
 mkdir -p "$BIN_DIR"
-ln -sfn "$ROOT/bin/ego-browser" "$BIN_DIR/ego-browser"
-say "Linked $BIN_DIR/ego-browser"
+ln -sfn "$ROOT/bin/agentspace" "$BIN_DIR/agentspace"
+say "Linked $BIN_DIR/agentspace"
 case ":$PATH:" in
   *":$BIN_DIR:"*) ;;
-  *) echo "    Add $BIN_DIR to PATH to run ego-browser directly." ;;
+  *) echo "    Add $BIN_DIR to PATH to run agentspace directly." ;;
 esac
 
 # 4. Agent skill (the CLI help points agents at this path)
 rm -rf "$SKILL_DIR"
 mkdir -p "$(dirname "$SKILL_DIR")"
-cp -R "$ROOT/sdk/agent-skills/ego-browser" "$SKILL_DIR"
-say "Installed the ego-browser agent skill into $SKILL_DIR"
+mkdir -p "$SKILL_DIR/references"
+cp "$ROOT/skill/SKILL.md" "$SKILL_DIR/SKILL.md"
+cp "$ROOT/sdk/agent-skills/ego-browser/references/clearing-state.md" "$SKILL_DIR/references/"
+say "Installed the agentspace agent skill into $SKILL_DIR"
 
 # 5. Desktop entry (lets `import` register agentspace as the default browser)
 mkdir -p "$APP_DIR"
@@ -90,7 +92,7 @@ cat > "$APP_DIR/agentspace.desktop" <<DESKTOP
 Type=Application
 Name=agentspace
 Comment=Browser for you and your AI agents
-Exec=$ROOT/bin/ego-browser open %u
+Exec=$ROOT/bin/agentspace open %u
 Terminal=false
 Categories=Network;WebBrowser;
 MimeType=text/html;x-scheme-handler/http;x-scheme-handler/https;
@@ -98,7 +100,7 @@ Actions=Panel;
 
 [Desktop Action Panel]
 Name=Spaces panel
-Exec=$ROOT/bin/ego-browser panel
+Exec=$ROOT/bin/agentspace panel
 DESKTOP
 command -v update-desktop-database >/dev/null && update-desktop-database "$APP_DIR" >/dev/null 2>&1 || true
 say "Installed $APP_DIR/agentspace.desktop"
@@ -112,7 +114,7 @@ After=graphical-session.target
 PartOf=graphical-session.target
 
 [Service]
-ExecStart=$ROOT/bin/ego-browser daemon
+ExecStart=$ROOT/bin/agentspace daemon
 Restart=on-failure
 
 [Install]
@@ -124,7 +126,7 @@ if command -v systemctl >/dev/null && systemctl --user show-environment >/dev/nu
   systemctl --user enable agentspace.service >/dev/null 2>&1 || true
   say "Enabled the agentspace user service (starts with your graphical session)"
 else
-  say "No systemd user session; ego-browser starts the daemon on demand"
+  say "No systemd user session; agentspace starts the daemon on demand"
 fi
 
-say "Done. Try: ego-browser nodejs -e 'console.log(await profiles())'"
+say "Done. Try: agentspace run -e 'console.log(await profiles())'"

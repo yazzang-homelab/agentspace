@@ -1,21 +1,21 @@
-[ego-browser:skill] ego-browser usage guide v2.1.0
+[agentspace:guide] agentspace usage guide v2.1.0
 
-# ego-browser
+# agentspace
 
 Call `help()` or `help("page.click")` to print signatures and uncommon options
 of APIs named below; it prints by itself, so do not wrap it in `console.log`.
 For installation or connection problems, read `references/install.md` in the
-ego-browser Skill directory.
+agentspace Skill directory.
 
 ## Run browser scripts
 
-Pass the script to `ego-browser nodejs`. The form depends on the shell that runs
+Pass the script to `agentspace run`. The form depends on the shell that runs
 the command: heredoc is Bash/Zsh syntax and does not exist in PowerShell or cmd.
 
 ### Bash, Zsh, Git Bash
 
 ```bash
-ego-browser nodejs <<'EOF'
+agentspace run <<'EOF'
 const task = await taskSpace("inspect example page");
 const page = task.page("p1");
 await page.goto("https://example.com");
@@ -30,7 +30,7 @@ the code and double quotes for JavaScript strings; single quotes within the code
 require shell quoting.
 
 ```bash
-ego-browser nodejs -e '
+agentspace run -e '
 const task = await taskSpace("inspect example page");
 await task.page("p1").goto("https://example.com");
 console.log(task.spaceId);
@@ -46,7 +46,7 @@ several lines to `-e`. Write it to a UTF-8 `.mjs` file instead and evaluate an
 ASCII-only one-line entry point, which needs no double quotes of its own:
 
 ```powershell
-ego-browser nodejs -e "await import('file:///C:/Users/<name>/ego/task.mjs')"
+agentspace run -e "await import('file:///C:/Users/<name>/ego/task.mjs')"
 ```
 
 The imported module runs with the same helpers and `console` as an inline
@@ -64,7 +64,7 @@ cmd has no heredoc, but it does support input redirection, so it can run the
 same `.mjs` file directly:
 
 ```bat
-ego-browser nodejs < C:\Users\<name>\ego\task.mjs
+agentspace run < C:\Users\<name>\ego\task.mjs
 ```
 
 ### Later rounds with a script file
@@ -95,7 +95,7 @@ with dynamic imports such as `await import("node:fs/promises")`. The script
 does not run in your shell's working directory, so use absolute paths for every
 file it reads or writes. It also does not inherit your shell's environment
 variables: `process.env` will not contain values you set before running
-`ego-browser`, so write every input directly into the script.
+`agentspace run`, so write every input directly into the script.
 
 Ego-browser deliberately exposes a small custom API. It is not Playwright, even
 where method names and options look similar. Use only the TaskSpace, Page,
@@ -114,7 +114,7 @@ as `fill()`, `press()`, `focus()`, `selectOption()`, `waitForSelector()`,
 The `label` in `selectOption(selector, { label })` is different: it selects the
 option whose visible text matches.
 
-When the user explicitly asks for ego-browser, start with a real browser command
+When the user explicitly asks for agentspace, start with a real browser command
 and diagnose the CLI or installation only if it fails.
 
 ## Spaces, rounds, and pages
@@ -145,7 +145,7 @@ await source.goto("https://example.com/releases");
 ```
 
 Do not inspect or select profiles unless the user explicitly requests a
-particular Ego Lite profile. A `profileId` applies only when creating a space;
+particular agentspace profile. A `profileId` applies only when creating a space;
 use `help("profiles")` for the exact workflow.
 
 Supported TaskSpace API:
@@ -186,7 +186,7 @@ as user-owned when deciding whether a Page may be closed.
 
 ## Page operations
 
-ego-browser provides the following Page API:
+agentspace provides the following Page API:
 
 - State and observation: `label`, `spaceId`, `openedBy`, `targetId`, `url()`,
   `title()`, `info()`, `snapshot()`, `screenshot()`
@@ -536,15 +536,15 @@ list the Pages to keep instead.
 Use `page.close()` only while the task is still in progress. Do not call
 `finish()` when the task stops for user control or an error.
 
-If the final output contains `[ego-browser:notice]`, finish the current browser
-task, tell the user an Ego Lite update is available, and run
-`ego-browser upgrade` only with their approval. Run `ego-browser skill` again
+If the final output contains `[agentspace:notice]`, finish the current browser
+task, tell the user an agentspace update is available, and run
+`agentspace upgrade` only with their approval. Run `agentspace guide` again
 after the upgrade.
 
 ## Clearing cookies, cache, and storage
 
 Before clearing any cookie, cache, or storage, read
-`references/clearing-state.md` in the ego-browser Skill directory. Some clears
+`references/clearing-state.md` in the agentspace Skill directory. Some clears
 reach the whole browser profile.
 
-[ego-browser:skill] end of guide v2.1.0
+[agentspace:guide] end of guide v2.1.0

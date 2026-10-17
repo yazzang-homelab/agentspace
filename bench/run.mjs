@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Benchmark: the same six-round "computer use" shopping task, driven
-//   A) through agentspace (`ego-browser nodejs` + SDK, snapshot observations)
+//   A) through agentspace (`agentspace run` + SDK, snapshot observations)
 //   B) against plain Chromium over raw CDP (coordinate input, screenshot observations)
 // Both use the same Chromium binary in headless mode, one process per round.
 //
@@ -17,7 +17,7 @@ import { CdpConnection } from "../lib/cdp.mjs";
 import { chromiumVersion, findChromium, launchChromium } from "../lib/chromium.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const CLI = join(ROOT, "bin", "ego-browser");
+const CLI = join(ROOT, "bin", "agentspace");
 const RAW_ROUND = join(ROOT, "bench", "raw-round.mjs");
 const ROUNDS = 6;
 
@@ -62,7 +62,7 @@ function agentspaceScript(round, baseUrl, taskName) {
         await page.click('loc=role:button[name="Place order"]');
         await page.waitForURL(/\\/done/);`,
   }[round];
-  // Observation last, as the ego-browser skill prescribes.
+  // Observation last, as the agent guide prescribes.
   return `${head}${body}\nconsole.log(await page.snapshot());\n`;
 }
 
@@ -112,7 +112,7 @@ async function benchAgentspace(baseUrl) {
     const cold = await run(CLI, ["start"], { env });
     // Fixed per-round cost: CLI -> daemon -> Node helper with the SDK loaded.
     const noop = [];
-    for (let index = 0; index < 5; index += 1) noop.push((await run(CLI, ["nodejs"], { input: "1;", env })).ms);
+    for (let index = 0; index < 5; index += 1) noop.push((await run(CLI, ["run"], { input: "1;", env })).ms);
     let sampleSnapshot;
     let memory;
     const iterations = [];
@@ -120,7 +120,7 @@ async function benchAgentspace(baseUrl) {
       const taskName = `bench-${iteration}`;
       const rounds = [];
       for (let round = 1; round <= ROUNDS; round += 1) {
-        const { ms, stdout } = await run(CLI, ["nodejs"], { input: agentspaceScript(round, baseUrl, taskName), env });
+        const { ms, stdout } = await run(CLI, ["run"], { input: agentspaceScript(round, baseUrl, taskName), env });
         rounds.push({ ms, observationChars: stdout.length });
         if (iteration === 0 && round === 4) sampleSnapshot = stdout;
         if (round === ROUNDS && !stdout.includes(EXPECTED_SUMMARY)) {
@@ -130,7 +130,7 @@ async function benchAgentspace(baseUrl) {
       iterations.push(rounds);
       // Memory with the finished task still open, before cleanup.
       if (iteration === ITERATIONS - 1) memory = rssMiB(home) + rssMiB(`${join(ROOT, "lib", "cli.mjs")} daemon`);
-      await run(CLI, ["nodejs"], {
+      await run(CLI, ["run"], {
         input: `const task = await taskSpace(${JSON.stringify(taskName)}); await task.finish({ keep: [] });`,
         env,
       });

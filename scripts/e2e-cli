@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Adapter for the upstream real-browser E2E runner, which calls
+# `<cli> nodejs --sdk-path <sdk>` with the script on stdin.
+set -euo pipefail
+ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+if [ "${1:-}" != "nodejs" ]; then
+  echo "e2e-cli: expected 'nodejs', got '${1:-}'" >&2
+  exit 2
+fi
+shift
+exec "$ROOT/bin/agentspace" run "$@"

@@ -2,6 +2,6 @@
   "repository": "https://github.com/citrolabs/ego-lite.git",
   "commit": "4cf79356509bccdead17863250b442f60a881c25",
   "package": "package/ego-browser",
-  "patches": ["0001-linux-browser-clipboard.patch"],
+  "patches": ["0001-linux-browser-clipboard.patch","0002-agentspace-command-names.patch"],
   "license": "MIT"
 }

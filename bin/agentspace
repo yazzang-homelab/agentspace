@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Launch ego-browser with a Node.js >= 22 runtime (the ego-browser SDK needs it).
+# Launch agentspace with a Node.js >= 22 runtime (the bundled SDK needs it).
 set -euo pipefail
 
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
@@ -23,7 +23,7 @@ pick_node() {
 }
 
 NODE="$(pick_node)" || {
-  echo "ego-browser needs Node.js >= 22. Run $ROOT/install.sh to fetch one, or set AGENTSPACE_NODE." >&2
+  echo "agentspace needs Node.js >= 22. Run $ROOT/install.sh to fetch one, or set AGENTSPACE_NODE." >&2
   exit 1
 }
 exec "$NODE" "$ROOT/lib/cli.mjs" "$@"

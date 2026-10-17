@@ -1,12 +1,12 @@
 {
   "name": "agentspace",
   "version": "0.1.0",
-  "description": "Unofficial Linux browser service compatible with the ego-browser SDK: task spaces, accessibility snapshots and a scoped CDP bridge on stock Chromium.",
+  "description": "Linux browser service for AI agents, compatible with the ego-browser SDK: task spaces, accessibility snapshots and a scoped CDP bridge on stock Chromium.",
   "type": "module",
   "private": true,
   "license": "MIT",
   "bin": {
-    "ego-browser": "bin/ego-browser"
+    "agentspace": "bin/agentspace"
   },
   "engines": {
     "node": ">=22"

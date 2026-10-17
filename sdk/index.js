@@ -221,7 +221,7 @@ function formatPageNotices(notices) {
         const url = oneLine(notice.url || "about:blank");
         return `Unhandled page ${notice.label}${source}: ${url}`;
     });
-    return `[ego-browser:pages]\n${lines.join("\n")}\n`;
+    return `[agentspace:pages]\n${lines.join("\n")}\n`;
 }
 function oneLine(value) {
     return value.replace(/\s+/g, " ").trim();
@@ -7763,7 +7763,7 @@ function nodeToString(node) {
     return "...";
 }
 
-const STALE_SKILL_PREFIX = "[ego-browser:skill-stale]";
+const STALE_SKILL_PREFIX = "[agentspace:skill-stale]";
 // These are the public top-level members exposed by the formal 1.3 Skill. Keep
 // the guard narrow: 1.2.3 globals remain supported, while unpublished beta
 // namespaces do not become a new compatibility surface.
@@ -7787,7 +7787,7 @@ class EgoBrowserSkillStaleError extends Error {
     constructor(member) {
         super([
             `${STALE_SKILL_PREFIX} This script uses the old egoBrowser.${member} API.`,
-            "Run `ego-browser skill` to read the current usage guide, then retry with the TaskSpace/Page API. Start with:",
+            "Run `agentspace guide` to read the current usage guide, then retry with the TaskSpace/Page API. Start with:",
             "  const task = await taskSpace(nameOrId)",
         ].join("\n"));
         this.name = "EgoBrowserSkillStaleError";
@@ -20792,12 +20792,12 @@ function installPageContextGuard(target) {
     }
 }
 
-const HELP = `ego-browser
+const HELP = `agentspace run
 
-Read the ego-browser skill for the default workflow and examples.
+Run \`agentspace guide\` for the default workflow and examples.
 
 Typical usage:
-  ego-browser <<'JS'
+  agentspace run <<'JS'
   const task = await taskSpace('demo')
   const page = task.page('p1')
   await page.goto('https://example.com')
@@ -20807,7 +20807,7 @@ Typical usage:
 Helpers are pre-imported and the browser connection is prepared automatically.
 `;
 const USAGE = `Usage:
-  ego-browser <<'JS'
+  agentspace run <<'JS'
   const task = await taskSpace('demo')
   const page = task.page('p1')
   await page.goto('https://example.com')
@@ -20943,10 +20943,10 @@ async function emitUpdateNotice(runtime, emit) {
             info.currentVersion.trim().length === 0) {
             return;
         }
-        emit(`[ego-browser:notice] Ego Lite update is available ` +
+        emit(`[agentspace:notice] An agentspace update is available ` +
             `(current ${info.currentVersion.trim()}). Finish the current browser task, ` +
-            "then ask the user before running `ego-browser upgrade`; re-read the " +
-            "ego-browser Skill afterward.");
+            "then ask the user before running `agentspace upgrade`; re-run " +
+            "`agentspace guide` afterward.");
     }
     catch {
         // An optional update hint must never fail the browser task.

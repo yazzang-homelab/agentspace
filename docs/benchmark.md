@@ -15,7 +15,7 @@
 
 | | agentspace | 일반 Chromium (raw CDP) |
 | --- | --- | --- |
-| 한 라운드 | `ego-browser nodejs` 스크립트 1회 | `node bench/raw-round.mjs` 1회 |
+| 한 라운드 | `agentspace run` 스크립트 1회 | `node bench/raw-round.mjs` 1회 |
 | 대상 지정 | 시맨틱 로케이터 (`loc=role:button[name="Sign in"]`) | 요소 중심 좌표 클릭, `Input.insertText`로 입력 |
 | 대기 | SDK `waitForURL` / `waitForFunction` | `Runtime.evaluate` 50ms 폴링 |
 | 관찰 | `page.snapshot()` (뷰포트 접근성 트리 텍스트) | 스크린샷 PNG (함께 기록한 `outerHTML` 크기는 참고용) |
